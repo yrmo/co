@@ -1,7 +1,7 @@
 """
 usage: co [-h] [filename]
 
-Text editor
+text editor
 
 positional arguments:
   filename    The file to open/edit.
@@ -15,17 +15,15 @@ import curses
 
 
 def main():
-    """Entry point"""
-    parser = argparse.ArgumentParser(description="Text editor")
+    parser = argparse.ArgumentParser(description="text editor")
     parser.add_argument(
         "filename", nargs="?", default="untitled.txt", help="The file to open/edit."
     )
     args = parser.parse_args()
-    curses.wrapper(run_editor, args.filename)
+    curses.wrapper(editor, args.filename)
 
 
-def run_editor(stdscr, filename):
-    """Editor"""
+def editor(stdscr, filename):
     curses.curs_set(1)
     curses.use_default_colors()
     stdscr.keypad(True)
