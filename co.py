@@ -34,7 +34,7 @@ def run_editor(stdscr, filename):
         with open(filename, "r") as f:
             lines = f.readlines()
     except FileNotFoundError:
-        lines = [""]
+        lines = []
 
     y, x = 0, 0
     scroll = 0
@@ -63,23 +63,23 @@ def run_editor(stdscr, filename):
                 y -= 1
                 if y < scroll:
                     scroll -= 1
-            x = min(x, len(lines[y]))
+            x = min(x, len(lines[y].rstrip("\n")))
         elif c == curses.KEY_DOWN:
             if y < len(lines) - 1:
                 y += 1
                 if y >= scroll + max_y:
                     scroll += 1
-            x = min(x, len(lines[y]))
+            x = min(x, len(lines[y].rstrip("\n")))
         elif c == curses.KEY_LEFT:
             if x > 0:
                 x -= 1
             elif y > 0:
                 y -= 1
-                x = len(lines[y])
+                x = len(lines[y].rstrip("\n"))
                 if y < scroll:
                     scroll -= 1
         elif c == curses.KEY_RIGHT:
-            if x < len(lines[y]):
+            if x < len(lines[y].rstrip("\n")):
                 x += 1
             elif y < len(lines) - 1:
                 y += 1
@@ -91,7 +91,7 @@ def run_editor(stdscr, filename):
                 lines[y] = lines[y][: x - 1] + lines[y][x:]
                 x -= 1
             elif y > 0:
-                x = len(lines[y - 1])
+                x = len(lines[y - 1].rstrip("\n"))
                 lines[y - 1] += lines[y]
                 del lines[y]
                 y -= 1
@@ -113,14 +113,17 @@ def run_editor(stdscr, filename):
                 scroll += 1
         elif c == 24:  # Ctrl + X to save and exit
             try:
-                with open(filename, "w") as f:
-                    f.writelines("".join(lines))
+                with open(filename, "w", newline="\n") as f:
+                    f.writelines(line if line.endswith('\n') else line + '\n' for line in lines)
                 break
             except Exception as e:
                 # Optionally, display an error message in the status bar
                 pass
         elif 0 <= c <= 255 and chr(c).isprintable():
-            lines[y] = lines[y][:x] + chr(c) + lines[y][x:]
+            try:
+                lines[y] = lines[y][:x] + chr(c) + lines[y][x:]
+            except:
+                lines = [chr(c)]
             x += 1
             if x >= max_x:
                 x = max_x - 1
