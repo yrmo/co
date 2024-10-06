@@ -1,31 +1,63 @@
+"""
+usage: co [-h] [filename]
+
+Text editor
+
+positional arguments:
+  filename    The file to open/edit.
+
+options:
+  -h, --help  show this help message and exit
+"""
+
+import argparse
 import curses
-import sys
 
 
-def main(stdscr, filename):
+def main():
+    """Entry point"""
+    parser = argparse.ArgumentParser(description="Text editor")
+    parser.add_argument(
+        "filename", nargs="?", default="untitled.txt", help="The file to open/edit."
+    )
+    args = parser.parse_args()
+    curses.wrapper(run_editor, args.filename)
+
+
+def run_editor(stdscr, filename):
+    """Editor"""
     curses.curs_set(1)
     curses.use_default_colors()
     stdscr.keypad(True)
+
     try:
         with open(filename, "r") as f:
             lines = f.readlines()
     except FileNotFoundError:
         lines = [""]
+
     y, x = 0, 0
     scroll = 0
+
     while True:
         stdscr.clear()
         max_y, max_x = stdscr.getmaxyx()
-        max_y -= 1
+        max_y -= 1  # Reserve the last line for status
+
         start_line = scroll
         end_line = scroll + max_y
+
         for idx, line in enumerate(lines[start_line:end_line], start=start_line):
             try:
                 stdscr.addstr(idx - scroll, 0, line.rstrip("\n")[:max_x])
             except curses.error:
-                pass
+                pass  # Ignore errors caused by lines exceeding window size
+
         stdscr.move(y - scroll, x)
+        stdscr.refresh()
+
         c = stdscr.getch()
+
         if c == curses.KEY_UP:
             if y > 0:
                 y -= 1
@@ -79,10 +111,14 @@ def main(stdscr, filename):
             x = 0
             if y >= scroll + max_y:
                 scroll += 1
-        elif c == 24:
-            with open(filename, "w") as f:
-                f.writelines("".join(lines))
-            break
+        elif c == 24:  # Ctrl + X to save and exit
+            try:
+                with open(filename, "w") as f:
+                    f.writelines("".join(lines))
+                break
+            except Exception as e:
+                # Optionally, display an error message in the status bar
+                pass
         elif 0 <= c <= 255 and chr(c).isprintable():
             lines[y] = lines[y][:x] + chr(c) + lines[y][x:]
             x += 1
@@ -90,6 +126,9 @@ def main(stdscr, filename):
                 x = max_x - 1
         elif c == curses.KEY_RESIZE:
             pass
+        else:
+            pass  # Ignore other keys
+
         scroll = max(0, min(scroll, len(lines) - max_y))
         x = min(x, len(lines[y]))
         if y - scroll < 0:
@@ -99,5 +138,4 @@ def main(stdscr, filename):
 
 
 if __name__ == "__main__":
-    filename = sys.argv[1] if len(sys.argv) > 1 else "untitled.txt"
-    curses.wrapper(main, filename)
+    main()
