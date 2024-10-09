@@ -1,15 +1,3 @@
-"""
-usage: co [-h] [filename]
-
-text editor
-
-positional arguments:
-  filename    The file to open/edit.
-
-options:
-  -h, --help  show this help message and exit
-"""
-
 import argparse
 import curses
 
