@@ -39,4 +39,4 @@ options:
 
 `^S` – Save.
 
-`^X`/`^W` – Exit.
+`^W` – Exit.
