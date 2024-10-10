@@ -18,12 +18,10 @@ pip install .
 ## Usage
 
 ```
-usage: co [-h] [filename]
-
-text editor
+usage: co [-h] filename
 
 positional arguments:
-  filename    The file to open/edit.
+  filename    The file to edit
 
 options:
   -h, --help  show this help message and exit
