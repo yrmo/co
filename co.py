@@ -109,6 +109,10 @@ def editor(stdscr, filename):
                 x = 0
                 if y >= scroll + max_y:
                     scroll += 1
+            elif c == 1:
+                x = 0
+            elif c == 5:
+                x = len(lines[y].rstrip("\n"))
             elif c == 19:
                 try:
                     with open(filename, "w", newline="\n") as f:

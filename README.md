@@ -31,12 +31,10 @@ options:
 
 ### Key bindings
 
-<!-- `^A` – Go to start of line. -->
-
-<!-- `^E` – Go to end of line. -->
-
-<!-- `^K` – Delete from cursor to end of line. -->
-
 `^S` – Save.
 
 `^W` – Exit.
+
+`^A` – Go to start of line.
+
+`^E` – Go to end of line.
