@@ -36,6 +36,7 @@ def editor(stdscr, filename):
 
         y, x = 0, 0
         scroll = 0
+        status = "^S Save. ^W Quit. ↑/↓/←/→ Navigate. ^A Line start. ^E Line end."
 
         while True:
             stdscr.clear()
@@ -51,24 +52,29 @@ def editor(stdscr, filename):
                 except curses.error:
                     pass  # Ignore errors caused by lines exceeding window size
 
+            stdscr.addstr(max_y, 0, status[:max_x], curses.A_REVERSE)
+
             stdscr.move(y - scroll, x)
             stdscr.refresh()
 
             c = stdscr.getch()
 
             if c == curses.KEY_UP:
+                status = ""
                 if y > 0:
                     y -= 1
                     if y < scroll:
                         scroll -= 1
                 x = min(x, len(lines[y].rstrip("\n")))
             elif c == curses.KEY_DOWN:
+                status = ""
                 if y < len(lines) - 1:
                     y += 1
                     if y >= scroll + max_y:
                         scroll += 1
                 x = min(x, len(lines[y].rstrip("\n")))
             elif c == curses.KEY_LEFT:
+                status = ""
                 if x > 0:
                     x -= 1
                 elif y > 0:
@@ -77,6 +83,7 @@ def editor(stdscr, filename):
                     if y < scroll:
                         scroll -= 1
             elif c == curses.KEY_RIGHT:
+                status = ""
                 if x < len(lines[y].rstrip("\n")):
                     x += 1
                 elif y < len(lines) - 1:
@@ -85,6 +92,7 @@ def editor(stdscr, filename):
                     if y >= scroll + max_y:
                         scroll += 1
             elif c in (curses.KEY_BACKSPACE, 127):
+                status = ""
                 if x > 0:
                     lines[y] = lines[y][: x - 1] + lines[y][x:]
                     x -= 1
@@ -96,12 +104,14 @@ def editor(stdscr, filename):
                     if y < scroll:
                         scroll = max(0, scroll - 1)
             elif c == curses.KEY_DC:
+                status = ""
                 if x < len(lines[y]):
                     lines[y] = lines[y][:x] + lines[y][x + 1 :]
                 elif y < len(lines) - 1:
                     lines[y] += lines[y + 1]
                     del lines[y + 1]
             elif c in (curses.KEY_ENTER, 10, 13):
+                status = ""
                 new_line = lines[y][x:]
                 lines[y] = lines[y][:x]
                 lines.insert(y + 1, new_line)
@@ -110,18 +120,23 @@ def editor(stdscr, filename):
                 if y >= scroll + max_y:
                     scroll += 1
             elif c == 1:
+                status = ""
                 x = 0
             elif c == 5:
+                status = ""
                 x = len(lines[y].rstrip("\n"))
             elif c == 19:
+                status = "Saved."
                 try:
                     with open(filename, "w", newline="\n") as f:
                         f.writelines(line if line.endswith('\n') else line + '\n' for line in lines)
                 except Exception as e:
                     pass
             elif c == 23:
+                status = "Exiting."
                 break
             elif 0 <= c <= 255 and chr(c).isprintable():
+                status = ""
                 try:
                     lines[y] = lines[y][:x] + chr(c) + lines[y][x:]
                 except:
