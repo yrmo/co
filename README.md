@@ -37,3 +37,5 @@ options:
 `^A` – Go to start of line.
 
 `^E` – Go to end of line.
+
+`^K` - Delete line.

@@ -125,6 +125,9 @@ def editor(stdscr, filename):
             elif c == 5:
                 status = ""
                 x = len(lines[y])
+            elif c == 11:
+                status = "Deleted line."
+                del lines[y]
             elif c == 19:
                 status = "Saved."
                 try:
