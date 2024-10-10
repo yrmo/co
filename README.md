@@ -5,6 +5,7 @@
 
 A pure Python terminal based text editor inspired by VS Code. 
 
+<img src="co.gif"></img>
 </div>
 
 ## Install
