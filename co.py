@@ -115,7 +115,7 @@ def editor(stdscr, filename):
                         f.writelines(line if line.endswith('\n') else line + '\n' for line in lines)
                 except Exception as e:
                     pass
-            elif c == 24:
+            elif c == 23 or c == 24:
                 break
             elif 0 <= c <= 255 and chr(c).isprintable():
                 try:
