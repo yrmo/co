@@ -30,13 +30,13 @@ def editor(stdscr, filename):
 
         try:
             with open(filename, "r") as f:
-                lines = f.readlines()
+                lines = [line.rstrip('\n') for line in f]
         except FileNotFoundError:
             lines = []
 
         y, x = 0, 0
         scroll = 0
-        status = "^S Save. ^W Quit. ↑/↓/←/→ Navigate. ^A Line start. ^E Line end."
+        status = "^S Save. ^W Quit. Arrow keys to navigate."
 
         while True:
             stdscr.clear()
@@ -48,7 +48,7 @@ def editor(stdscr, filename):
 
             for idx, line in enumerate(lines[start_line:end_line], start=start_line):
                 try:
-                    stdscr.addstr(idx - scroll, 0, line.rstrip("\n")[:max_x])
+                    stdscr.addstr(idx - scroll, 0, line[:max_x])
                 except curses.error:
                     pass  # Ignore errors caused by lines exceeding window size
 
@@ -65,26 +65,26 @@ def editor(stdscr, filename):
                     y -= 1
                     if y < scroll:
                         scroll -= 1
-                x = min(x, len(lines[y].rstrip("\n")))
+                x = min(x, len(lines[y]))
             elif c == curses.KEY_DOWN:
                 status = ""
                 if y < len(lines) - 1:
                     y += 1
                     if y >= scroll + max_y:
                         scroll += 1
-                x = min(x, len(lines[y].rstrip("\n")))
+                x = min(x, len(lines[y]))
             elif c == curses.KEY_LEFT:
                 status = ""
                 if x > 0:
                     x -= 1
                 elif y > 0:
                     y -= 1
-                    x = len(lines[y].rstrip("\n"))
+                    x = len(lines[y])
                     if y < scroll:
                         scroll -= 1
             elif c == curses.KEY_RIGHT:
                 status = ""
-                if x < len(lines[y].rstrip("\n")):
+                if x < len(lines[y]):
                     x += 1
                 elif y < len(lines) - 1:
                     y += 1
@@ -97,7 +97,7 @@ def editor(stdscr, filename):
                     lines[y] = lines[y][: x - 1] + lines[y][x:]
                     x -= 1
                 elif y > 0:
-                    x = len(lines[y - 1].rstrip("\n"))
+                    x = len(lines[y - 1])
                     lines[y - 1] += lines[y]
                     del lines[y]
                     y -= 1
@@ -124,12 +124,12 @@ def editor(stdscr, filename):
                 x = 0
             elif c == 5:
                 status = ""
-                x = len(lines[y].rstrip("\n"))
+                x = len(lines[y])
             elif c == 19:
                 status = "Saved."
                 try:
                     with open(filename, "w", newline="\n") as f:
-                        f.writelines(line if line.endswith('\n') else line + '\n' for line in lines)
+                        f.writelines(line + '\n' for line in lines)
                 except Exception as e:
                     pass
             elif c == 23:
