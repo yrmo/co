@@ -1,14 +1,18 @@
 import argparse
 import curses
+import os
 import sys
 import termios
 
 def main():
-    parser = argparse.ArgumentParser(description="text editor")
-    parser.add_argument(
-        "filename", nargs="?", default="untitled.txt", help="The file to open/edit."
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", help="The file to edit")
     args = parser.parse_args()
+
+    if not os.path.isfile(args.filename):
+        print(f"co: No such file '{args.filename}'")
+        sys.exit(1)
+
     curses.wrapper(editor, args.filename)
 
 
