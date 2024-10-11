@@ -1,7 +1,10 @@
 import argparse
+import collections
 import curses
+import itertools
 import locale
 import os
+import re
 import sys
 import termios
 import unicodedata
@@ -34,6 +37,20 @@ def editor(stdscr, filename):
 
         with open(filename, "r") as f:
             lines = [line.rstrip("\n") for line in f]
+
+        padding = []
+        for line in lines:
+            m = re.match("^\s+", line)
+            if m is not None:
+                g = m.group()
+                print(len(g))
+                if len(g) != 0:
+                    padding.append(len(g))
+        counts = [x[0] for x in collections.Counter(padding).most_common()[:4]]
+        differences = [abs(x - y) for x, y in itertools.combinations(counts, 2)]
+        mod4 = sum(1 for d in differences if d % 4 == 0)
+        mod2 = sum(1 for d in differences if d % 2 == 0 and d % 4 != 0)
+        TAB_SPACES_LENGTH = 4 if mod4 > mod2 else 2
 
         y, x = 0, 0
         scroll = 0
@@ -146,6 +163,16 @@ def editor(stdscr, filename):
             elif c == 5:
                 status = ""
                 x = len(lines[y])
+            elif c == 9:
+                for _ in range(TAB_SPACES_LENGTH):
+                    status = ""
+                    try:
+                        lines[y] = lines[y][:x] + chr(32) + lines[y][x:]
+                    except:
+                        lines = [chr(32)]
+                    x += 1
+                    if x >= max_x:
+                        x = max_x - 1
             elif c == 11:
                 status = "Deleted line."
                 del lines[y]
