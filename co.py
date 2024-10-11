@@ -1,8 +1,11 @@
 import argparse
 import curses
+import locale
 import os
 import sys
 import termios
+import unicodedata
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,31 +20,49 @@ def main():
 
 
 def editor(stdscr, filename):
+    locale.setlocale(locale.LC_ALL, "")
     try:
         fd = sys.stdin.fileno()
         old_attrs = termios.tcgetattr(fd)
         new_attrs = termios.tcgetattr(fd)
-        new_attrs[0] &= ~(termios.IXON | termios.IXOFF)  # c_iflag
+        new_attrs[0] &= ~(termios.IXON | termios.IXOFF)
         termios.tcsetattr(fd, termios.TCSANOW, new_attrs)
 
         curses.curs_set(1)
         curses.use_default_colors()
         stdscr.keypad(True)
 
-        try:
-            with open(filename, "r") as f:
-                lines = [line.rstrip('\n') for line in f]
-        except FileNotFoundError:
-            lines = []
+        with open(filename, "r") as f:
+            lines = [line.rstrip("\n") for line in f]
 
         y, x = 0, 0
         scroll = 0
         status = "^S Save. ^W Quit. Arrow keys to navigate."
 
+        def char_width(char):
+            width = unicodedata.east_asian_width(char)
+            if width in ["W", "F"]:
+                return 2
+            elif width in ["N", "Na", "H"]:
+                return 1
+            elif width == "A":
+                return 2
+            return 1
+
+        def char_widths(string):
+            positions = []
+            current_pos = 0
+            for char in string:
+                positions.append(current_pos)
+                current_pos += char_width(char)
+            positions.append(current_pos)
+            return positions
+
         while True:
+            positions = char_widths(lines[y])
             stdscr.clear()
             max_y, max_x = stdscr.getmaxyx()
-            max_y -= 1  # Reserve the last line for status
+            max_y -= 1
 
             start_line = scroll
             end_line = scroll + max_y
@@ -50,11 +71,11 @@ def editor(stdscr, filename):
                 try:
                     stdscr.addstr(idx - scroll, 0, line[:max_x])
                 except curses.error:
-                    pass  # Ignore errors caused by lines exceeding window size
+                    pass
 
             stdscr.addstr(max_y, 0, status[:max_x], curses.A_REVERSE)
 
-            stdscr.move(y - scroll, x)
+            stdscr.move(y - scroll, positions[x])
             stdscr.refresh()
 
             c = stdscr.getch()
@@ -132,7 +153,7 @@ def editor(stdscr, filename):
                 status = "Saved."
                 try:
                     with open(filename, "w", newline="\n") as f:
-                        f.writelines(line + '\n' for line in lines)
+                        f.writelines(line + "\n" for line in lines)
                 except Exception as e:
                     pass
             elif c == 23:
@@ -150,7 +171,7 @@ def editor(stdscr, filename):
             elif c == curses.KEY_RESIZE:
                 pass
             else:
-                pass  # Ignore other keys
+                pass
 
             scroll = max(0, min(scroll, len(lines) - max_y))
             x = min(x, len(lines[y]))
@@ -160,6 +181,7 @@ def editor(stdscr, filename):
                 scroll = y - max_y + 1
     finally:
         termios.tcsetattr(fd, termios.TCSANOW, old_attrs)
+
 
 if __name__ == "__main__":
     main()
