@@ -70,7 +70,10 @@ def editor(stdscr, filename):
         return positions
 
     while True:
-        positions = char_widths(lines[y])
+        if lines != []:
+            positions = char_widths(lines[y])
+        else:
+            positions = [0]
         stdscr.clear()
         max_y, max_x = stdscr.getmaxyx()
         max_y -= 1
