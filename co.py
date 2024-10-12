@@ -48,6 +48,7 @@ def editor(stdscr, filename):
     y, x = 0, 0
     scroll = 0
     status = "^S Save. ^W Quit. Arrow keys to navigate."
+    x_memory = 0
 
     def char_width(char):
         width = unicodedata.east_asian_width(char)
@@ -162,6 +163,7 @@ def editor(stdscr, filename):
                     y -= 1
                     if y < scroll:
                         scroll -= 1
+                x = x_memory if x_memory > x else x
                 x = min(x, len(lines[y]))
             elif c == curses.KEY_DOWN:
                 status = ""
@@ -169,6 +171,7 @@ def editor(stdscr, filename):
                     y += 1
                     if y >= scroll + max_y:
                         scroll += 1
+                x = x_memory if x_memory > x else x
                 x = min(x, len(lines[y]))
             elif c == curses.KEY_LEFT:
                 status = ""
@@ -179,6 +182,7 @@ def editor(stdscr, filename):
                     x = len(lines[y])
                     if y < scroll:
                         scroll -= 1
+                x_memory = x if x < x_memory else x_memory
             elif c == curses.KEY_RIGHT:
                 status = ""
                 if x < len(lines[y]):
@@ -188,6 +192,7 @@ def editor(stdscr, filename):
                     x = 0
                     if y >= scroll + max_y:
                         scroll += 1
+                x_memory = x if x > x_memory else x_memory
             elif c == curses.KEY_DC:
                 status = ""
                 if x < len(lines[y]):
