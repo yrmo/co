@@ -1,7 +1,5 @@
 <div align="center">
-<h1>
-    <div>コ</div>
-</h1>
+<h1>co</h1>
 
 A pure Python terminal based text editor inspired by VS Code. 
 
