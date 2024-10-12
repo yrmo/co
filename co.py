@@ -6,7 +6,6 @@ import locale
 import os
 import re
 import sys
-import termios
 import unicodedata
 
 
@@ -94,110 +93,112 @@ def editor(stdscr, filename):
 
         c = stdscr.get_wch()
 
-        if c == curses.KEY_UP:
-            status = ""
-            if y > 0:
-                y -= 1
-                if y < scroll:
-                    scroll -= 1
-            x = min(x, len(lines[y]))
-        elif c == curses.KEY_DOWN:
-            status = ""
-            if y < len(lines) - 1:
-                y += 1
-                if y >= scroll + max_y:
-                    scroll += 1
-            x = min(x, len(lines[y]))
-        elif c == curses.KEY_LEFT:
-            status = ""
-            if x > 0:
-                x -= 1
-            elif y > 0:
-                y -= 1
-                x = len(lines[y])
-                if y < scroll:
-                    scroll -= 1
-        elif c == curses.KEY_RIGHT:
-            status = ""
-            if x < len(lines[y]):
-                x += 1
-            elif y < len(lines) - 1:
+        if isinstance(c, str):
+            if c == '\b' or c == '\x7f':
+                status = ""
+                if x > 0:
+                    lines[y] = lines[y][: x - 1] + lines[y][x:]
+                    x -= 1
+                elif y > 0:
+                    x = len(lines[y - 1])
+                    lines[y - 1] += lines[y]
+                    del lines[y]
+                    y -= 1
+                    if y < scroll:
+                        scroll = max(0, scroll - 1)
+            elif c == "\n":
+                status = ""
+                new_line = lines[y][x:]
+                lines[y] = lines[y][:x]
+                lines.insert(y + 1, new_line)
                 y += 1
                 x = 0
                 if y >= scroll + max_y:
                     scroll += 1
-        elif c in (curses.KEY_BACKSPACE, 127):
-            status = ""
-            if x > 0:
-                lines[y] = lines[y][: x - 1] + lines[y][x:]
-                x -= 1
-            elif y > 0:
-                x = len(lines[y - 1])
-                lines[y - 1] += lines[y]
+            elif c == "\x01":
+                status = ""
+                x = 0
+            elif c == "\x05":
+                status = ""
+                x = len(lines[y])
+            elif c == "\x09":
+                for _ in range(TAB_SPACES_LENGTH):
+                    status = ""
+                    try:
+                        lines[y] = lines[y][:x] + chr(32) + lines[y][x:]
+                    except:
+                        lines = [chr(32)]
+                    x += 1
+                    if x >= max_x:
+                        x = max_x - 1
+            elif c == "\x13":
+                status = "Saved."
+                try:
+                    with open(filename, "w", newline="\n") as f:
+                        f.writelines(line + "\n" for line in lines)
+                except Exception as e:
+                    pass
+            elif c == "\x16":
+                status = "Pasted."
+            elif c == "\x17":
+                status = "Exiting."
+                break
+            elif c == "\x0B":
+                status = "Deleted line."
                 del lines[y]
-                y -= 1
-                if y < scroll:
-                    scroll = max(0, scroll - 1)
-        elif c == curses.KEY_DC:
-            status = ""
-            if x < len(lines[y]):
-                lines[y] = lines[y][:x] + lines[y][x + 1 :]
-            elif y < len(lines) - 1:
-                lines[y] += lines[y + 1]
-                del lines[y + 1]
-        elif c in (curses.KEY_ENTER, 10, 13):
-            status = ""
-            new_line = lines[y][x:]
-            lines[y] = lines[y][:x]
-            lines.insert(y + 1, new_line)
-            y += 1
-            x = 0
-            if y >= scroll + max_y:
-                scroll += 1
-        elif c == 1:
-            status = ""
-            x = 0
-        elif c == 5:
-            status = ""
-            x = len(lines[y])
-        elif c == 9:
-            for _ in range(TAB_SPACES_LENGTH):
+            else:
                 status = ""
                 try:
-                    lines[y] = lines[y][:x] + chr(32) + lines[y][x:]
+                    lines[y] = lines[y][:x] + c + lines[y][x:]
                 except:
-                    lines = [chr(32)]
+                    lines = [c]
                 x += 1
                 if x >= max_x:
                     x = max_x - 1
-        elif c == 11:
-            status = "Deleted line."
-            del lines[y]
-        elif c == 19:
-            status = "Saved."
-            try:
-                with open(filename, "w", newline="\n") as f:
-                    f.writelines(line + "\n" for line in lines)
-            except Exception as e:
+        elif isinstance(c, int):
+            if c == curses.KEY_UP:
+                status = ""
+                if y > 0:
+                    y -= 1
+                    if y < scroll:
+                        scroll -= 1
+                x = min(x, len(lines[y]))
+            elif c == curses.KEY_DOWN:
+                status = ""
+                if y < len(lines) - 1:
+                    y += 1
+                    if y >= scroll + max_y:
+                        scroll += 1
+                x = min(x, len(lines[y]))
+            elif c == curses.KEY_LEFT:
+                status = ""
+                if x > 0:
+                    x -= 1
+                elif y > 0:
+                    y -= 1
+                    x = len(lines[y])
+                    if y < scroll:
+                        scroll -= 1
+            elif c == curses.KEY_RIGHT:
+                status = ""
+                if x < len(lines[y]):
+                    x += 1
+                elif y < len(lines) - 1:
+                    y += 1
+                    x = 0
+                    if y >= scroll + max_y:
+                        scroll += 1
+            elif c == curses.KEY_DC:
+                status = ""
+                if x < len(lines[y]):
+                    lines[y] = lines[y][:x] + lines[y][x + 1 :]
+                elif y < len(lines) - 1:
+                    lines[y] += lines[y + 1]
+                    del lines[y + 1]
+            elif c == curses.KEY_RESIZE:
                 pass
-        elif c == 22:
-            status = "Pasted."
-        elif c == 23:
-            status = "Exiting."
-            break
-        elif 0 <= c <= 255 and chr(c).isprintable():
-            status = ""
-            try:
-                lines[y] = lines[y][:x] + chr(c) + lines[y][x:]
-            except:
-                lines = [chr(c)]
-            x += 1
-            if x >= max_x:
-                x = max_x - 1
-        elif c == curses.KEY_RESIZE:
-            pass
-        else:
-            pass
+            else:
+                pass
 
         scroll = max(0, min(scroll, len(lines) - max_y))
         x = min(x, len(lines[y]))
