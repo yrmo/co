@@ -11,9 +11,7 @@ A pure Python terminal based text editor inspired by VS Code.
 ## Install
 
 ```
-git clone git@github.com:yrmo/co.git
-cd co
-pip install .
+pip install git+https://github.com/yrmo/co.git
 ```
 
 ## Usage
