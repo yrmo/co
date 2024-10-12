@@ -92,7 +92,7 @@ def editor(stdscr, filename):
         stdscr.move(y - scroll, positions[x])
         stdscr.refresh()
 
-        c = stdscr.getch()
+        c = stdscr.get_wch()
 
         if c == curses.KEY_UP:
             status = ""
