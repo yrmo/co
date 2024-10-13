@@ -136,10 +136,10 @@ def editor(stdscr, filename):
                     scroll += 1
             elif c == "\x01":
                 status = ""
-                x = 0
+                x = x_memory = 0
             elif c == "\x05":
                 status = ""
-                x = len(lines[y])
+                x = x_memory = len(lines[y])
             elif c == "\x09":
                 go_forward = TAB_SPACES_LENGTH if x == 0 or is_whitespace() else 1
                 for _ in range(go_forward):
