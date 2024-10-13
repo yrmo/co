@@ -1,7 +1,7 @@
 <div align="center">
 <h1>co</h1>
 
-A pure Python terminal based text editor inspired by VS Code. 
+A pure Python terminal based text editor inspired by Visual Studio Code. 
 
 <img src="co.gif"></img>
 </div>
@@ -26,12 +26,20 @@ options:
 
 ### Key bindings
 
-`^S` – Save.
+`↑`/`↓`/`←`/`→` - Navigate.
 
-`^W` – Exit.
+`Tab` - Tab.
 
-`^A` – Go to start of line.
+`^S` - Save.
 
-`^E` – Go to end of line.
+`^W` - Exit.
+
+`^C` - Copy.
+
+`^V` - Paste.
+
+`^A` - Go to start of line.
+
+`^E` - Go to end of line.
 
 `^K` - Delete line.
