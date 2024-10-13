@@ -11,24 +11,24 @@ import unicodedata
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("filename", help="The file to edit")
+    parser.add_argument("filepath", help="the file to edit")
     args = parser.parse_args()
 
-    if not os.path.isfile(args.filename):
-        print(f"co: No such file '{args.filename}'")
+    if not os.path.isfile(args.filepath):
+        print(f"co: No such file '{args.filepath}'")
         sys.exit(1)
 
-    curses.wrapper(editor, args.filename)
+    curses.wrapper(editor, args.filepath)
 
 
-def editor(stdscr, filename):
+def editor(stdscr, filepath):
     locale.setlocale(locale.LC_ALL, "")
     curses.curs_set(1)
     curses.use_default_colors()
     curses.raw()
     stdscr.keypad(True)
 
-    with open(filename, "r") as f:
+    with open(filepath, "r") as f:
         lines = [line.rstrip("\n") for line in f]
 
     padding = []
@@ -154,7 +154,7 @@ def editor(stdscr, filename):
             elif c == "\x13":
                 status = "Saved."
                 try:
-                    with open(filename, "w", newline="\n") as f:
+                    with open(filepath, "w", newline="\n") as f:
                         f.writelines(line + "\n" for line in lines)
                 except Exception as e:
                     pass

@@ -15,10 +15,10 @@ pip install git+https://github.com/yrmo/co.git
 ## Usage
 
 ```
-usage: co [-h] filename
+usage: co [-h] filepath
 
 positional arguments:
-  filename    The file to edit
+  filepath    the file to edit
 
 options:
   -h, --help  show this help message and exit
