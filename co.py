@@ -105,7 +105,7 @@ def editor(stdscr, filename):
         if isinstance(c, str):
             if c == '\b' or c == '\x7f':
                 status = ""
-                if is_whitespace():
+                if is_whitespace() or (len(lines[y][:x]) <= 4 and set(lines[y][:x]) == set(" ")):
                     go_back = TAB_SPACES_LENGTH
                 else:
                     go_back = 1
