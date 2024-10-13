@@ -45,6 +45,8 @@ def editor(stdscr, filename):
     mod2 = sum(1 for d in differences if d % 2 == 0 and d % 4 != 0)
     TAB_SPACES_LENGTH = 4 if mod4 > mod2 else 2
 
+    LINE_NUMBERS = False
+
     y, x = 0, 0
     scroll = 0
     status = "^S Save. ^W Quit. Arrow keys to navigate."
@@ -74,6 +76,18 @@ def editor(stdscr, filename):
             positions = char_widths(lines[y])
         else:
             positions = [0]
+
+        if LINE_NUMBERS:
+            visual_lines = []
+            for i, line in enumerate(lines):
+                if len(line) + len(str(i)) + 1 > max_x:
+                    line = f"{i}".rjust(len(str(len(lines)))) + " " + line[:-2]
+                else:
+                    line = f"{i}".rjust(len(str(len(lines)))) + " " + line
+                visual_lines.append(line)
+        else:
+            visual_lines = lines
+
         stdscr.clear()
         max_y, max_x = stdscr.getmaxyx()
         max_y -= 1
@@ -81,7 +95,7 @@ def editor(stdscr, filename):
         start_line = scroll
         end_line = scroll + max_y
 
-        for idx, line in enumerate(lines[start_line:end_line], start=start_line):
+        for idx, line in enumerate(visual_lines[start_line:end_line], start=start_line):
             try:
                 stdscr.addstr(idx - scroll, 0, line[:max_x])
             except curses.error:
@@ -166,6 +180,9 @@ def editor(stdscr, filename):
             elif c == "\x0B":
                 status = "Deleted line."
                 del lines[y]
+            elif c == "\x0C":
+                LINE_NUMBERS = not LINE_NUMBERS
+                status = f"Lines {'ON' if LINE_NUMBERS else 'OFF'}"
             else:
                 status = ""
                 try:
