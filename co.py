@@ -94,19 +94,37 @@ def editor(stdscr, filename):
 
         c = stdscr.get_wch()
 
+        def is_whitespace() -> bool:
+            m = re.match("^\s+", lines[y])
+            if m is not None:
+                g = m.group()
+                return len(g) == x
+            else:
+                return False
+
         if isinstance(c, str):
             if c == '\b' or c == '\x7f':
                 status = ""
-                if x > 0:
-                    lines[y] = lines[y][: x - 1] + lines[y][x:]
-                    x -= 1
-                elif y > 0:
-                    x = len(lines[y - 1])
-                    lines[y - 1] += lines[y]
-                    del lines[y]
-                    y -= 1
-                    if y < scroll:
-                        scroll = max(0, scroll - 1)
+                if is_whitespace():
+                    go_back = TAB_SPACES_LENGTH
+                else:
+                    go_back = 1
+                try:
+                    for _ in range(go_back):
+                        if go_back > 1:
+                            re.match("\s", lines[y][x - 1]).group()
+                        if x > 0:
+                            lines[y] = lines[y][: x - 1] + lines[y][x:]
+                            x -= 1
+                        elif y > 0:
+                            x = len(lines[y - 1])
+                            lines[y - 1] += lines[y]
+                            del lines[y]
+                            y -= 1
+                            if y < scroll:
+                                scroll = max(0, scroll - 1)
+                except:
+                    pass
             elif c == "\n":
                 status = ""
                 new_line = lines[y][x:]
@@ -123,7 +141,8 @@ def editor(stdscr, filename):
                 status = ""
                 x = len(lines[y])
             elif c == "\x09":
-                for _ in range(TAB_SPACES_LENGTH):
+                go_forward = TAB_SPACES_LENGTH if x == 0 or is_whitespace() else 1
+                for _ in range(go_forward):
                     status = ""
                     try:
                         lines[y] = lines[y][:x] + chr(32) + lines[y][x:]
