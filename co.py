@@ -36,7 +36,6 @@ def editor(stdscr, filepath):
         m = re.match("^\s+", line)
         if m is not None:
             g = m.group()
-            print(len(g))
             if len(g) != 0:
                 padding.append(len(g))
     counts = [x[0] for x in collections.Counter(padding).most_common()[:4]]
@@ -47,6 +46,7 @@ def editor(stdscr, filepath):
 
     y, x = 0, 0
     scroll = 0
+    hscroll = 0
     status = "^S Save. ^W Quit. Arrow keys to navigate."
     x_memory = 0
 
@@ -83,13 +83,24 @@ def editor(stdscr, filepath):
 
         for idx, line in enumerate(lines[start_line:end_line], start=start_line):
             try:
-                stdscr.addstr(idx - scroll, 0, line[:max_x])
+                stdscr.addstr(idx - scroll, 0, line[hscroll : hscroll + max_x])
             except curses.error:
                 pass
 
         stdscr.addstr(max_y, 0, status[:max_x], curses.A_REVERSE)
 
-        stdscr.move(y - scroll, positions[x])
+        screen_x = positions[x] - hscroll
+
+        if screen_x < 0:
+            hscroll = positions[x] - int(max_x / 2)
+            if hscroll < 0:
+                hscroll = 0
+            screen_x = positions[x] - hscroll
+        elif screen_x >= max_x:
+            hscroll = positions[x] - int(max_x / 2)
+            screen_x = positions[x] - hscroll
+
+        stdscr.move(y - scroll, screen_x)
         stdscr.refresh()
 
         c = stdscr.get_wch()
@@ -103,9 +114,11 @@ def editor(stdscr, filepath):
                 return False
 
         if isinstance(c, str):
-            if c == '\b' or c == '\x7f':
+            if c == "\b" or c == "\x7f":
                 status = ""
-                if is_whitespace() or (len(lines[y][:x]) <= 4 and set(lines[y][:x]) == set(" ")):
+                if is_whitespace() or (
+                    len(lines[y][:x]) <= 4 and set(lines[y][:x]) == set(" ")
+                ):
                     go_back = TAB_SPACES_LENGTH
                 else:
                     go_back = 1
@@ -149,15 +162,13 @@ def editor(stdscr, filepath):
                     except:
                         lines = [chr(32)]
                     x += 1
-                    if x >= max_x:
-                        x = max_x - 1
             elif c == "\x13":
                 status = "Saved."
                 try:
                     with open(filepath, "w", newline="\n") as f:
                         f.writelines(line + "\n" for line in lines)
                 except Exception as e:
-                    pass
+                    status = f"co: error saving file: {e}"
             elif c == "\x16":
                 status = "Pasted."
             elif c == "\x17":
@@ -166,6 +177,9 @@ def editor(stdscr, filepath):
             elif c == "\x0B":
                 status = "Deleted line."
                 del lines[y]
+                if y >= len(lines):
+                    y = len(lines) - 1
+                x = min(x, len(lines[y]))
             else:
                 status = ""
                 try:
@@ -173,8 +187,6 @@ def editor(stdscr, filepath):
                 except:
                     lines = [c]
                 x += 1
-                if x >= max_x:
-                    x = max_x - 1
         elif isinstance(c, int):
             if c == curses.KEY_UP:
                 status = ""
@@ -182,16 +194,14 @@ def editor(stdscr, filepath):
                     y -= 1
                     if y < scroll:
                         scroll -= 1
-                x = x_memory if x_memory > x else x
-                x = min(x, len(lines[y]))
+                x = min(x_memory, len(lines[y]))
             elif c == curses.KEY_DOWN:
                 status = ""
                 if y < len(lines) - 1:
                     y += 1
                     if y >= scroll + max_y:
                         scroll += 1
-                x = x_memory if x_memory > x else x
-                x = min(x, len(lines[y]))
+                x = min(x_memory, len(lines[y]))
             elif c == curses.KEY_LEFT:
                 status = ""
                 if x > 0:
@@ -201,7 +211,7 @@ def editor(stdscr, filepath):
                     x = len(lines[y])
                     if y < scroll:
                         scroll -= 1
-                x_memory = x if x < x_memory else x_memory
+                x_memory = x
             elif c == curses.KEY_RIGHT:
                 status = ""
                 if x < len(lines[y]):
@@ -211,7 +221,7 @@ def editor(stdscr, filepath):
                     x = 0
                     if y >= scroll + max_y:
                         scroll += 1
-                x_memory = x if x > x_memory else x_memory
+                x_memory = x
             elif c == curses.KEY_DC:
                 status = ""
                 if x < len(lines[y]):
