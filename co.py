@@ -81,9 +81,9 @@ def editor(stdscr, filename):
             visual_lines = []
             for i, line in enumerate(lines):
                 if len(line) + len(str(i)) + 1 > max_x:
-                    line = f"{i + 1}".rjust(len(str(len(lines)))) + " " + line[:-2]
+                    line = f"{i + 1}".rjust(len(str(len(lines)))) + "  " + line[:-2]
                 else:
-                    line = f"{i + 1}".rjust(len(str(len(lines)))) + " " + line
+                    line = f"{i + 1}".rjust(len(str(len(lines)))) + "  " + line
                 visual_lines.append(line)
         else:
             visual_lines = lines
